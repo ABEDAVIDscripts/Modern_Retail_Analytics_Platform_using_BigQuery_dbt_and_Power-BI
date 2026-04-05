@@ -73,7 +73,7 @@ A cloud-native data warehouse was implemented using Google BigQuery to support s
 The environment was structured into two logical datasets to separate raw ingestion from transformed analytics layers:
 
 #### 1.  Raw Layer (`retail_raw`) <BR>
-<img Weight="40" alt="data warehouse env_raw" src="https://github.com/user-attachments/assets/c0458725-2d86-455c-96c3-978ed26cdc44" /> 
+<img Weight="30" alt="data warehouse env_raw" src="https://github.com/user-attachments/assets/c0458725-2d86-455c-96c3-978ed26cdc44" /> 
 
 <br>
 
