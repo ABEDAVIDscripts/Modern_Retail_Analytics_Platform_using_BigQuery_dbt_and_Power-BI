@@ -6,7 +6,9 @@
 
 This repository represents an end-to-end analytics engineering implementation for a retail business, covering the full lifecycle from raw data ingestion to business intelligence delivery. <br>
 
-The work demonstrates how raw transactional data can be transformed into reliable, analytics-ready datasets using modern data stack tools, and ultimately consumed through interactive dashboards for decision-making.               
+The work demonstrates how raw transactional data can be transformed into reliable, analytics-ready datasets using modern data stack tools, and ultimately consumed through interactive dashboards for decision-making.   <br>
+
+The pipeline was designed to be efficient, scalable, and cost-optimized within BigQuery, leveraging dbt for modular, reusable transformations.
 
 <BR>
 <BR>
@@ -25,9 +27,23 @@ The primary goals of this implementation:
 <BR>
 <BR>
 
+
+### 🧰 Technology Stack
+| Layer          | Technology        |
+| :------------- | :---------------- |
+| Data Warehouse | BigQuery          |
+| Transformation | dbt               |
+| Data Modeling  | SQL (Star Schema) |
+| Data Quality   | dbt tests         |
+| Documentation  | dbt docs          |
+| Visualization  | Power BI          |
+
+
+<br>
+<br>
+<br>
+
 ## Architecture
-
-
 A layered ELT architecture was implemented:
 
 ```text
@@ -46,16 +62,42 @@ Power BI Dashboard
 <BR>
 <BR>
 
+## Data Warehouse (BigQuery)
+A cloud-native data warehouse was implemented using Google BigQuery to support scalable, high-performance analytics. 
 
-### 🧰 Technology Stack
-| Layer          | Technology        |
-| :------------- | :---------------- |
-| Data Warehouse | BigQuery          |
-| Transformation | dbt               |
-| Data Modeling  | SQL (Star Schema) |
-| Data Quality   | dbt tests         |
-| Documentation  | dbt docs          |
-| Visualization  | Power BI          |
+<br>
+
+The environment was structured into two logical datasets to separate raw ingestion from transformed analytics layers:
+
+1. Raw Layer (`retail_raw`) <BR>
+This dataset stores the original source data exactly as ingested from operational systems. <BR>
+Tables include: transactions, customers, products, stores, employees, discounts
+
+<BR>
+
+Key Characteristics: <BR>
+- Serves as the single source of truth
+- No transformations applied (read-only layer)
+- Enables traceability and reproducibility of all downstream models
+- Configured with source freshness checks in dbt to simulate production monitoring
+
+<BR>
+
+2. Analytics Layer (`retail_dw`) <BR>
+This dataset contains all transformed, analytics-ready models built using dbt.
+
+It is organized into structured layers: <BR>
+
+- Core Models (Star Schema) <BR>
+  - Fact Table: `fct_transactions` (line-level transactional grain)
+  - Dimension Tables: dim_customers, dim_products, dim_stores & dim_employees.
+
+<BR> 
+
+- Analytics Marts
+  - Sales : sales_daily, sales_by_store & sales_by_product
+  - Customer : customer_lifetime_value & customer_rfm
+
 
 
 <BR>
@@ -364,6 +406,7 @@ The following built-in dbt tests were applied:
 
 > All tests were declaratively defined in schema.yml, following production-grade best practices.
 
+
 <br>
 <br>
 
@@ -390,57 +433,131 @@ dbt test
 
 <BR>
 
-- dbt Run Result 
+- dbt Run Result <br>
 <img height="200" alt="dbt run recent" src="https://github.com/user-attachments/assets/1f690c3b-a111-4e77-bf55-88b4082ee753" />
 
 <BR>
 <BR>
 
-- dbt Test Result
+- dbt Test Result <br>
 <img height="200" alt="dbt test recent" src="https://github.com/user-attachments/assets/38908749-bd9e-4d48-8516-9dda8070d9c0" />
 
 
-  <br>
-  <br>
-  
-  <br>
+<br>
+<br>
+<br>
 
 
 ## Analytics Marts
 #### 1. Sales Analytics
 - sales_daily: Daily revenue, orders, items sold, discounts <br>
-<img  height="250" alt="sales_daily" src="https://github.com/user-attachments/assets/abf506c5-a826-4ea1-93d9-a9ecbd63d535" /> 
-
-
-<br>
-
-- sales_by_store: Store-level performance and ranking  <br>
-<img height="250" alt="sales_by_store" src="https://github.com/user-attachments/assets/e8cb3be1-c154-41e6-8ba4-b39ef27db289" />
-
+  <img  height="250" alt="sales_daily" src="https://github.com/user-attachments/assets/abf506c5-a826-4ea1-93d9-a9ecbd63d535" /> <br>
 
 <br>
 
-- sales_by_product: Product/category performance insights <br>
-<img height="250" alt="sales_by_product" src="https://github.com/user-attachments/assets/fb5a50ca-8c92-4e65-bc7a-7ade0fe7823a" /> 
+
+- sales_by_store: Store-level performance and ranking <br>
+  <img height="250" alt="sales_by_store" src="https://github.com/user-attachments/assets/e8cb3be1-c154-41e6-8ba4-b39ef27db289" /> <br>
+
+<br>
 
 
 
+- sales_by_product: Product <br>
+  <img height="250" alt="sales_by_product" src="https://github.com/user-attachments/assets/fb5a50ca-8c92-4e65-bc7a-7ade0fe7823a" />
+
+<br>  
 <br>
 
 #### 2. Customer Analytics
 
 - customer_lifetime_value
-  - Revenue contribution
-  - Order behavior
-  - Customer tenure
+```sql
+{{ config(materialized='table') }}
+
+with customer_base as 
+(
+    select
+      c.customer_id, c.customer_name, c.city, c.country,
+      f.store_key,
+      count(*) as transactions
+
+    from {{ ref('fct_transactions') }} f
+
+    left join {{ ref('dim_customers') }} c
+      on f.customer_key = c.customer_key
+
+    group by
+      c.customer_id, c.customer_name, c.city, c.country,
+      f.store_key
+),
+
+ranked_store as 
+(
+    select *,
+      row_number() over(partition by customer_id order by transactions desc) as rn
+    from customer_base
+)
+
+select
+    c.customer_id, c.customer_name, c.city, c.country,
+    s.store_name as primary_store,
+
+    count(distinct f.invoice_id) as total_orders,
+    sum(f.line_total) as lifetime_revenue,
+    avg(f.line_total) as avg_order_value,
+
+    min(f.transaction_date) as first_purchase_date,
+    max(f.transaction_date) as last_purchase_date,
+
+    date_diff(max(f.transaction_date), min(f.transaction_date), day) as customer_tenure_days
+
+from {{ ref('fct_transactions') }} f
+
+left join {{ ref('dim_customers') }} c
+    on f.customer_key = c.customer_key
+
+left join ranked_store rs
+    on c.customer_id = rs.customer_id and rs.rn = 1
+
+left join {{ ref('dim_stores') }} s
+    on rs.store_key = s.store_key
+
+group by
+    c.customer_id,
+    c.customer_name,
+    c.city,
+    c.country,
+    s.store_name
+```    
+
+<br>
 
 - customer_rfm
-  - Recency
-  - Frequency
-  - Monetary value
+<img height="250" alt="customer_rfm" src="https://github.com/user-attachments/assets/2b30d85d-2143-409d-aa3d-b9bfcf0d99ec" />
+
+<br>
 
 ✔ Enables customer segmentation and behavioral analysis
 
+<br>
+<br>
+<br>
+
+### Data Lineage (dbt DAG)
+The lineage graph illustrates the full dependency flow from raw data sources to final analytics marts. <br>
+This ensures transparency, traceability, and impact analysis across the pipeline. <br>
+
+<img height="400" alt="Lineage DAG updated" src="https://github.com/user-attachments/assets/87927602-3918-40fa-ae62-0f176c476f79" />
+
+<br>
+<br>
+
+### Performance Optimization
+- Aggregation tables (marts) reduce query cost in BigQuery
+- Clustered tables improve query performance
+
+<br>
 <br>
 <br>
 
