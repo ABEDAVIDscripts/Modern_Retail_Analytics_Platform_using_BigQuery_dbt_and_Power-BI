@@ -1,6 +1,5 @@
 # Modern Retail Analytics Engineering Platform
 
-<br>
 
 ### Overview
 
@@ -63,19 +62,14 @@ Power BI Dashboard
 <BR>
 
 ## Data Warehouse (BigQuery)
-A cloud-native data warehouse was implemented using Google BigQuery to support scalable, high-performance analytics. <br>
-
-<img height="300" alt="data warehouse env" src="https://github.com/user-attachments/assets/a1132c11-f4c1-492f-9132-9cc24119035e" /> 
+<img height="350" alt="data warehouse env" src="https://github.com/user-attachments/assets/40751237-0c33-41bd-97e1-08648fca7d3e" /> <br>
 
 <br>
-<br>
 
-The environment was structured into two logical datasets to separate raw ingestion from transformed analytics layers:
+A cloud-native data warehouse was implemented using Google BigQuery to support scalable, high-performance analytics. The environment was structured into two logical datasets to separate raw ingestion from transformed analytics layers:
 
-#### 1.  Raw Layer (`retail_raw`) <BR>
-<img Weight="30" alt="data warehouse env_raw" src="https://github.com/user-attachments/assets/c0458725-2d86-455c-96c3-978ed26cdc44" /> 
 
-<br>
+#### 1.  Raw Layer (`retail_raw`) 
 
 This dataset stores the original source data exactly as ingested from operational systems. <BR>
 Tables include: transactions, customers, products, stores, employees, discounts <BR>
@@ -101,7 +95,9 @@ This dataset contains all transformed, analytics-ready models built using dbt. I
 
 <BR> 
 
-- Analytics Marts
+- Analytics Marts <br>
+<img height="300" alt="sales_daily query" src="https://github.com/user-attachments/assets/39fd050f-dec8-4a26-abca-40b809c14d8f" /> <br>
+
   - Sales : sales_daily, sales_by_store & sales_by_product
   - Customer : customer_lifetime_value & customer_rfm
 
