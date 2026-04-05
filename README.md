@@ -1,4 +1,4 @@
-# 🛍️ Modern Retail Analytics Engineering Platform
+# Modern Retail Analytics Engineering Platform
 
 <br>
 
@@ -9,6 +9,8 @@ This repository represents an end-to-end analytics engineering implementation fo
 The work demonstrates how raw transactional data can be transformed into reliable, analytics-ready datasets using modern data stack tools, and ultimately consumed through interactive dashboards for decision-making.               
 
 <BR>
+<BR>
+
 
 ### Business Objectives
 
@@ -21,8 +23,11 @@ The primary goals of this implementation:
 
 <BR>
 <BR>
+<BR>
 
-### 🏗️ Architecture
+## Architecture
+
+
 A layered ELT architecture was implemented:
 
 ```text
@@ -39,6 +44,8 @@ Power BI Dashboard
 
 <BR>
 <BR>
+<BR>
+
 
 ### 🧰 Technology Stack
 | Layer          | Technology        |
@@ -53,6 +60,8 @@ Power BI Dashboard
 
 <BR>
 <BR>
+<BR>
+
 
 ### 📂 Project Structure
 
@@ -86,8 +95,10 @@ models/
 │       └── customer_rfm.sql
 ```
 
-<br>
-<br>
+<BR>
+<BR>
+<BR>
+
 
 ### Data Transformation Process
 
@@ -107,35 +118,20 @@ row_number() over (
 
 <br>
 
-- Staging tables:
-  * `stg_customers` <br>
-    <img height="250" alt="stg_customers cleaning code upgrade" src="https://github.com/user-attachments/assets/4f8bed3d-cd63-4d17-adde-fe658edcd9b0" />
+- Example Staging Models:
 
-
-  * `stg_products` <br>
-    <img height="250" alt="stg_products cleaning code upgrade" src="https://github.com/user-attachments/assets/91355ed5-bb99-4de4-8516-919026e7ea6c" />
-
-
-  * `stg_stores` <br>
-    <img height="250" alt="stg_stores cleaning code upgrade" src="https://github.com/user-attachments/assets/f9b7451f-f69c-4db9-b2e7-69dc84559cd2" />
-
-  
-  * `stg_employees` <br>
-    <img height="250" alt="stg_employees cleaning code upgrade" src="https://github.com/user-attachments/assets/aca0fc82-2b2d-4627-aa7e-4d5cf1b97f58" />
-
-
-  * `stg_discounts` <br>
-    <img height="250" alt="stg_discount cleaning code upgrade" src="https://github.com/user-attachments/assets/d6b7e4bf-fe19-46f4-a940-105c8a94d100" />
-
-
-  * `stg_transactions` <br>
+  * stg_transactions (core transformation logic) <br>
     <img height="250" alt="stg_transactions cleaning code upgrade" src="https://github.com/user-attachments/assets/09268317-e843-4abc-bd07-b15693c30513" />
 
-    <br>
+    <BR>
 
+  * stg_customers (dimension preparation) <br>
+    <img height="250" alt="stg_customers cleaning code upgrade" src="https://github.com/user-attachments/assets/4f8bed3d-cd63-4d17-adde-fe658edcd9b0" />
 
-- Sources <br>
+<BR>
+<BR>
 
+- Sources
 ```sql
 version: 2
 
@@ -234,20 +230,12 @@ invoice_id + line_number + product_id + sku
 
 <br>
 
-**ii. Dimension Tables** <br>
-* `dim_customers` <BR>
+**ii. Dimension Table** <br>
+* dim_customers (One of 4 Dimension Tables) <BR>
   <img height="250" alt="dim_customers" src="https://github.com/user-attachments/assets/1f22a6ad-751b-43d3-84c9-7bbc08f90ce0" />
 
-* `dim_products` <BR>
-  <img height="250" alt="dim_products" src="https://github.com/user-attachments/assets/861349c7-91da-4f2a-88b2-48ee6916b2ba" />
-
-* `dim_stores` <BR>
-  <img height="250" alt="dim_stores" src="https://github.com/user-attachments/assets/cf07a281-b2fb-4c62-b050-633fbdca22b3" />
-
-* `dim_employees` <BR>
-  <img height="250" alt="dim_employees" src="https://github.com/user-attachments/assets/b762cff8-0581-4451-85a4-5945cacf9419" />
-
 <BR>
+<br>
 
 **iii. Schema** <br>
 
@@ -377,6 +365,7 @@ The following built-in dbt tests were applied:
 > All tests were declaratively defined in schema.yml, following production-grade best practices.
 
 <br>
+<br>
 
 #### 4. Source Freshness Monitoring
 Source freshness checks were configured to simulate production monitoring:
@@ -390,17 +379,49 @@ freshness:
 <br>
 <br>
 
+#### 5. dbt Execution
+
+Models were built and validated using dbt commands:
+
+```bash
+dbt run
+dbt test
+```
+
+<BR>
+
+- dbt Run Result 
+<img height="250" alt="dbt run recent" src="https://github.com/user-attachments/assets/1f690c3b-a111-4e77-bf55-88b4082ee753" />
+
+<BR>
+
+- dbt Test Result
+<img height="250" alt="dbt test recent" src="https://github.com/user-attachments/assets/38908749-bd9e-4d48-8516-9dda8070d9c0" />
+
+
+<BR>
+<BR>
+<BR>
+
+
 ### Analytics Marts
 #### 1. Sales Analytics
+- sales_daily: Daily revenue, orders, items sold, discounts <br>
+<img  height="250" alt="sales_daily" src="https://github.com/user-attachments/assets/abf506c5-a826-4ea1-93d9-a9ecbd63d535" /> 
 
-- sales_daily
-  - Daily revenue, orders, items sold, discounts
 
-- sales_by_store
-  - Store-level performance and ranking
+<br>
 
-- sales_by_product
-  - Product/category performance insights
+- sales_by_store: Store-level performance and ranking  <br>
+<img height="250" alt="sales_by_store" src="https://github.com/user-attachments/assets/e8cb3be1-c154-41e6-8ba4-b39ef27db289" />
+
+
+<br>
+
+- sales_by_product: Product/category performance insights <br>
+<img height="250" alt="sales_by_product" src="https://github.com/user-attachments/assets/fb5a50ca-8c92-4e65-bc7a-7ade0fe7823a" /> 
+
+
 
 <br>
 
