@@ -5,7 +5,7 @@
 
 This repository represents an end-to-end analytics engineering implementation for a retail business, covering the full lifecycle from raw data ingestion to business intelligence delivery. <br>
 
-The work demonstrates how raw transactional data can be transformed into reliable, analytics-ready datasets using modern data stack tools, and ultimately consumed through interactive dashboards for decision-making.   <br>
+This implementation demonstrates how raw transactional data can be transformed into reliable, analytics-ready datasets using modern data stack tools, and ultimately consumed through interactive dashboards for decision-making.   <br>
 
 The pipeline was designed to be efficient, scalable, and cost-optimized within BigQuery, leveraging dbt for modular, reusable transformations.
 
@@ -21,6 +21,25 @@ The primary goals of this implementation:
 - Implement robust data quality validation
 - Design analytics-ready data marts
 - Enable business insights through Power BI dashboards
+
+<BR>
+<BR>
+<BR>
+
+## Architecture
+A layered ELT architecture was implemented:
+
+```text
+Raw Data (BigQuery - retail_raw)
+        ↓
+Staging Layer (dbt cleaning & standardization)
+        ↓
+Core Models (Fact + Dimensions)
+        ↓
+Analytics Marts (Business Aggregations)
+        ↓
+Power BI Dashboard
+```
 
 <BR>
 <BR>
@@ -42,24 +61,7 @@ The primary goals of this implementation:
 <br>
 <br>
 
-## Architecture
-A layered ELT architecture was implemented:
 
-```text
-Raw Data (BigQuery - retail_raw)
-        ↓
-Staging Layer (dbt cleaning & standardization)
-        ↓
-Core Models (Fact + Dimensions)
-        ↓
-Analytics Marts (Business Aggregations)
-        ↓
-Power BI Dashboard
-```
-
-<BR>
-<BR>
-<BR>
 
 ## Data Warehouse (BigQuery)
 <img height="350" alt="data warehouse env" src="https://github.com/user-attachments/assets/40751237-0c33-41bd-97e1-08648fca7d3e" /> <br>
@@ -85,21 +87,23 @@ Key Characteristics: <BR>
 #### 2.  Analytics Layer (`retail_dw`) <BR>
 This dataset contains all transformed, analytics-ready models built using dbt. It is organized into structured layers:
 
-- Staging Layer:
-  - dbt Transformation Layer: stg_transactions, stg_customers, stg_products, stg_stores, stg_employees, stg_discounts
+**i. Staging Layer** <br>
+- dbt Transformation Layer: stg_transactions, stg_customers, stg_products, stg_stores, stg_employees, stg_discounts
 
 
-- Core Models (Star Schema) <BR>
-  - Fact Table: `fct_transactions` (line-level transactional grain)
-  - Dimension Tables: dim_customers, dim_products, dim_stores & dim_employees.
+**ii. Core Models (Star Schema)** <BR>
+- Fact Table: `fct_transactions` (line-level transactional grain)
+- Dimension Tables: dim_customers, dim_products, dim_stores & dim_employees.
 
 <BR> 
 
-- Analytics Marts <br>
-<img height="300" alt="sales_daily query" src="https://github.com/user-attachments/assets/39fd050f-dec8-4a26-abca-40b809c14d8f" /> <br>
+**iii. Analytics Marts** <br>
+- Sales: sales_daily, sales_by_store & sales_by_product <br>
+<img height="300" alt="sales_daily query" src="https://github.com/user-attachments/assets/d41c8599-f4ac-4bd1-9436-462500c56b3d" />
 
-  - Sales : sales_daily, sales_by_store & sales_by_product
-  - Customer : customer_lifetime_value & customer_rfm
+<br>
+
+- Customer: customer_lifetime_value & customer_rfm
 
 
 <BR>
@@ -575,27 +579,35 @@ This ensures transparency, traceability, and impact analysis across the pipeline
 ### Business Intelligence (Power BI)
 A multi-page dashboard was developed to support business decision-making:
 
-- Page 1: Executive Overview
+- Executive Overview <br>
+<img height="300" alt="executive overview" src="https://github.com/user-attachments/assets/1c353651-ac27-461f-b200-cd628cbf530b" /> <br>
+
   - Total Revenue, Orders, Discount and Gross Sales KPI
   - Revenue & order trends over time
 
 <Br>
 
-- Page 2: Store Performance
+- Store Performance <br>
+<img height="300" alt="store performance" src="https://github.com/user-attachments/assets/a490e43c-ce98-46d5-b17b-26e280f9fa81" /> <br>
+
   - Revenue by store
   - Order distribution
   - Store records
 
 <br>
 
-- Page 3: Product Performance
+- Product Performance <br>
+<img height="300" alt="product performance" src="https://github.com/user-attachments/assets/4d293d1f-d796-40cf-bed9-99be5b335375" /> <br>
+
   - Category Performance
   - Top-performing products
   - Revenue vs Unit sold
 
 <br>
 
-- Page 4: Customer Insights
+- Customer Insights <br>
+<img height="300" alt="customer insight" src="https://github.com/user-attachments/assets/4a9f5d4a-3207-4999-b4bc-7e848d1da3d3" /> <br>
+
   - Customer records
   - Customer segmentation (RFM)
   - Purchase distribution
@@ -630,3 +642,19 @@ A multi-page dashboard was developed to support business decision-making:
   - A small segment of customers generates high order volume and revenue, highlighting the importance of loyal/VIP customers.
   - High-value customers are a minority, meaning revenue is concentrated among a few top customers.
   - Customer activity is concentrated in major cities (e.g., Shenzhen, Shanghai, Guangzhou), suggesting strong urban market dependence.
+
+<br>
+<br>
+
+## Key Engineering Decisions
+
+- Adopted a star schema for analytical performance and simplicity
+- Used surrogate keys to maintain consistency across joins
+- Built modular dbt models to ensure reusability and scalability
+- Created aggregated marts to reduce query cost in BI layer
+🔹 B. “Scalability Considerations”
+## Scalability Considerations
+
+- Models designed to support incremental loading (future enhancement)
+- BigQuery used for distributed query processing at scale
+- dbt enables modular expansion of new business domains
