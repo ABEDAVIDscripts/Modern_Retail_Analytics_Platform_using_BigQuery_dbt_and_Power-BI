@@ -1,5 +1,6 @@
-# Modern Retail Analytics Engineering Platform
+# Modern Retail Analytics Engineering Platform (BigQuery + dbt + Power BI)
 
+<br>
 
 ### Overview
 
@@ -9,7 +10,6 @@ This implementation demonstrates how raw transactional data can be transformed i
 
 The pipeline was designed to be efficient, scalable, and cost-optimized within BigQuery, leveraging dbt for modular, reusable transformations.
 
-<BR>
 <BR>
 
 
@@ -26,7 +26,9 @@ The primary goals of this implementation:
 <BR>
 <BR>
 
-## Architecture
+
+## Architecture & Technology
+
 A layered ELT architecture was implemented:
 
 ```text
@@ -42,11 +44,9 @@ Power BI Dashboard
 ```
 
 <BR>
-<BR>
-<BR>
 
 
-### 🧰 Technology Stack
+### Technology Stack
 | Layer          | Technology        |
 | :------------- | :---------------- |
 | Data Warehouse | BigQuery          |
@@ -64,17 +64,17 @@ Power BI Dashboard
 
 
 ## Data Warehouse (BigQuery)
-<img height="350" alt="data warehouse env" src="https://github.com/user-attachments/assets/40751237-0c33-41bd-97e1-08648fca7d3e" /> <br>
+<img height="400" alt="data warehouse env" src="https://github.com/user-attachments/assets/0d8ca87e-f075-489c-803e-c3dc8b226a26" /> <br>
 
 <br>
 
 A cloud-native data warehouse was implemented using Google BigQuery to support scalable, high-performance analytics. The environment was structured into two logical datasets to separate raw ingestion from transformed analytics layers:
 
 
-#### 1.  Raw Layer (`retail_raw`) 
+### 1.  Raw Layer (`retail_raw`) 
 
 This dataset stores the original source data exactly as ingested from operational systems. <BR>
-Tables include: transactions, customers, products, stores, employees, discounts <BR>
+Tables include: transactions(6,416,827), customers, products, stores, employees, discounts <BR>
 
 Key Characteristics: <BR>
 - Serves as the single source of truth
@@ -84,43 +84,46 @@ Key Characteristics: <BR>
 
 <BR>
 
-#### 2.  Analytics Layer (`retail_dw`) <BR>
+### 2. Analytics Layer (`retail_dw`) <BR>
 This dataset contains all transformed, analytics-ready models built using dbt. It is organized into structured layers:
 
-**i. Staging Layer** <br>
-- dbt Transformation Layer: stg_transactions, stg_customers, stg_products, stg_stores, stg_employees, stg_discounts
+**i. Staging Tables** <br>
+- Transformation tables: stg_transactions, stg_customers, stg_products, stg_stores, stg_employees, stg_discounts
 
 
-**ii. Core Models (Star Schema)** <BR>
+**ii. Core Data Tables (Star Schema)** <BR>
 - Fact Table: `fct_transactions` (line-level transactional grain)
+  - Final processed records: ~6.4M rows (6,408,257)
+  - Deduplication removed ~8,500 duplicate records, ensuring a clean transactional grain
 - Dimension Tables: dim_customers, dim_products, dim_stores & dim_employees.
 
 <BR> 
 
-**iii. Analytics Marts** <br>
+**iii. Analytics Tables** <br>
 - Sales: sales_daily, sales_by_store & sales_by_product <br>
-<img height="300" alt="sales_daily query" src="https://github.com/user-attachments/assets/d41c8599-f4ac-4bd1-9436-462500c56b3d" />
+  <img height="300" alt="sales_daily query" src="https://github.com/user-attachments/assets/d41c8599-f4ac-4bd1-9436-462500c56b3d" /> <br>
 
 <br>
 
 - Customer: customer_lifetime_value & customer_rfm
+  <img height="300" alt="customer_rfm dw 2" src="https://github.com/user-attachments/assets/c888efcc-ec40-4fd1-bb7f-4af9b983e4f1" /> <BR>
 
+
+<BR>
+
+### Implementation Highlights
+- Designed a scalable BigQuery warehouse using dataset separation (retail_raw vs retail_dw)
+- Optimized storage and query performance using partitioning and clustering strategies
+- Materialized analytics tables to reduce query cost and improve BI performance
+- Leveraged BigQuery’s distributed processing for large-scale aggregations
+- Enabled seamless integration with dbt for transformation orchestration and model management
 
 <BR>
 <br>
-
-#### Implementation Highlights
-- Built using dbt-managed transformations with modular SQL models
-- Materialized tables optimized for analytical query performance
-- Leveraged BigQuery’s distributed architecture for efficient large-scale aggregations
-- Designed with a clear separation of concerns:
-  - Raw ingestion (retail_raw)
-  - Business-ready analytics (retail_dw)
-
-<BR>
+<br>
 
 
-### 📂 Project Structure
+## 📂 Project Structure
 
 ```text
 models/
@@ -157,10 +160,10 @@ models/
 <BR>
 
 
-### Data Transformation Process
+## Data Transformation Process (dbt)
 
-#### 1. Staging Layer (Data Cleaning & Standardization)
-Raw data was transformed to ensure consistency and reliability:
+### 1. Staging Layer (Data Cleaning & Standardization)
+Raw data was transformed to improve data quality, consistency, and usability for downstream modeling:
 - Data type casting
 - Column renaming and formatting
 - String standardization (trim, lower)
@@ -173,22 +176,25 @@ row_number() over (
 )
 ```
 
+
+✔ Established a consistent transaction grain through deduplication and standardization  <br>
+✔ This layer ensures standardized, analysis-ready inputs for downstream models <br>
+
 <br>
 
 - Example Staging Models:
 
   * stg_transactions (core transformation logic) <br>
-    <img height="250" alt="stg_transactions cleaning code upgrade" src="https://github.com/user-attachments/assets/09268317-e843-4abc-bd07-b15693c30513" />
+    <img height="250" alt="stg_transactions cleaning code upgrade" src="https://github.com/user-attachments/assets/09268317-e843-4abc-bd07-b15693c30513" /> <BR>
 
-    <BR>
 
-  * stg_customers (dimension preparation) <br>
+  * stg_customers (1 of 6 staging models) <br>
     <img height="250" alt="stg_customers cleaning code upgrade" src="https://github.com/user-attachments/assets/4f8bed3d-cd63-4d17-adde-fe658edcd9b0" />
 
 <BR>
 <BR>
 
-- Sources
+- Sources Configuration (dbt)
 ```sql
 version: 2
 
@@ -215,14 +221,13 @@ sources:
       - name: discounts
 ```
 
-✔ Ensured a correct and stable transaction grain
 
 <br>
 <br>
 
-#### 2. Core Data Model
+### 2. Core Data Modeling
 
-**i. Fact Table: `fct_transactions`**  <BR>
+**i. Fact Model: `fct_transactions`**  <BR>
 ```SQL
 select
 
@@ -277,24 +282,18 @@ left join {{ ref('dim_employees') }} e
     on t.employee_id = e.employee_id
 ```    
  
-  * Line-level transactional data
-  * Surrogate key generated using: <Br>
-```sql
-invoice_id + line_number + product_id + sku
-```
-
-✔ Guarantees uniqueness and consistent grain
+✔ Line-level transactional data with a surrogate key generated from invoice_id, line_number, product_id, and sku. <br>
+✔ Enforces uniqueness and preserves transaction-level grain through surrogate keys.
 
 <br>
 
-**ii. Dimension Table** <br>
-* dim_customers (One of 4 Dimension Tables) <BR>
+**ii. Dimension Models** <br>
+ dim_customers (1 of 4 Dimension Models) <BR>
   <img height="250" alt="dim_customers" src="https://github.com/user-attachments/assets/1f22a6ad-751b-43d3-84c9-7bbc08f90ce0" />
 
-<BR>
 <br>
 
-**iii. Schema** <br>
+**iii. Data Model Schema** <br>
 
 ```sql
 version: 2
@@ -399,12 +398,12 @@ models:
                 field: employee_key
 ```            
   
-✔ Built using Surrogate keys, Clean joins and Standardized attributes
+✔ Built using surrogate keys, optimized joins, and conformed dimensions
 
 <br>
 <br>
 
-#### 3. Data Quality Testing
+### 3. Data Quality Testing
 Data quality validation was implemented using dbt schema.yml files, where tests were defined at the model and column level. <Br>
 
 The following built-in dbt tests were applied:
@@ -425,7 +424,7 @@ The following built-in dbt tests were applied:
 <br>
 <br>
 
-#### 4. Source Freshness Monitoring
+### 4. Data Freshness & Monitoring
 Source freshness checks were configured to simulate production monitoring:
 
 ```yaml
@@ -437,7 +436,7 @@ freshness:
 <br>
 <br>
 
-#### 5. dbt Execution
+### 5. dbt Execution
 
 Models were built and validated using dbt commands:
 
@@ -446,37 +445,32 @@ dbt run
 dbt test
 ```
 
-<BR>
+<br>
 
 - dbt Run Result <br>
-<img height="200" alt="dbt run recent" src="https://github.com/user-attachments/assets/1f690c3b-a111-4e77-bf55-88b4082ee753" />
+<img height="200" alt="dbt run recent" src="https://github.com/user-attachments/assets/1f690c3b-a111-4e77-bf55-88b4082ee753" /> <br>
 
-<BR>
-<BR>
+<br>
+
 
 - dbt Test Result <br>
-<img height="200" alt="dbt test recent" src="https://github.com/user-attachments/assets/38908749-bd9e-4d48-8516-9dda8070d9c0" />
-
+<img height="200" alt="dbt test recent" src="https://github.com/user-attachments/assets/38908749-bd9e-4d48-8516-9dda8070d9c0" /> <br>
 
 <br>
 <br>
-<br>
 
 
-## Analytics Marts
-#### 1. Sales Analytics
+### 6. Analytics Marts
+**i. Sales Analytics** <br>
 - sales_daily: Daily revenue, orders, items sold, discounts <br>
   <img  height="250" alt="sales_daily" src="https://github.com/user-attachments/assets/abf506c5-a826-4ea1-93d9-a9ecbd63d535" /> <br>
 
 <br>
 
-
 - sales_by_store: Store-level performance and ranking <br>
   <img height="250" alt="sales_by_store" src="https://github.com/user-attachments/assets/e8cb3be1-c154-41e6-8ba4-b39ef27db289" /> <br>
 
 <br>
-
-
 
 - sales_by_product: Product <br>
   <img height="250" alt="sales_by_product" src="https://github.com/user-attachments/assets/fb5a50ca-8c92-4e65-bc7a-7ade0fe7823a" />
@@ -484,7 +478,7 @@ dbt test
 <br>  
 <br>
 
-#### 2. Customer Analytics
+**ii. Customer Analytics** <br>
 
 - customer_lifetime_value
 ```sql
@@ -557,37 +551,42 @@ group by
 
 <br>
 <br>
-<br>
 
-### Data Lineage (dbt DAG)
+
+### 7. Data Lineage (dbt DAG)
 The lineage graph illustrates the full dependency flow from raw data sources to final analytics marts. <br>
 This ensures transparency, traceability, and impact analysis across the pipeline. <br>
 
-<img height="400" alt="Lineage DAG updated" src="https://github.com/user-attachments/assets/87927602-3918-40fa-ae62-0f176c476f79" />
+<img height="400" alt="Lineage DAG updated" src="https://github.com/user-attachments/assets/87927602-3918-40fa-ae62-0f176c476f79" /> <br>
+
+<img height="400" alt="customer_rfm doc 2" src="https://github.com/user-attachments/assets/cbebc0b0-0891-4216-a759-c5126e11c83f" />
 
 <br>
 <br>
 
-### Performance Optimization
+### 8. Performance Optimization
 - Aggregation tables (marts) reduce query cost in BigQuery
 - Clustered tables improve query performance
+- Partitioned large tables (transactions) by transaction_date to reduce query scan costs
+- Applied clustering on frequently filtered columns (e.g., store_key, product_key) to improve query performance
 
 <br>
 <br>
 <br>
 
-### Business Intelligence (Power BI)
-A multi-page dashboard was developed to support business decision-making:
+## Business Intelligence (Data Visualization)
+A multi-page dashboard was developed in Power BI to support business decision-making:
 
-- Executive Overview <br>
+#### 1. Executive Overview <br>
 <img height="300" alt="executive overview" src="https://github.com/user-attachments/assets/1c353651-ac27-461f-b200-cd628cbf530b" /> <br>
 
   - Total Revenue, Orders, Discount and Gross Sales KPI
   - Revenue & order trends over time
 
-<Br>
+<br>
 
-- Store Performance <br>
+
+#### 2. Store Performance <br>
 <img height="300" alt="store performance" src="https://github.com/user-attachments/assets/a490e43c-ce98-46d5-b17b-26e280f9fa81" /> <br>
 
   - Revenue by store
@@ -596,7 +595,8 @@ A multi-page dashboard was developed to support business decision-making:
 
 <br>
 
-- Product Performance <br>
+
+#### 3. Product Performance <br>
 <img height="300" alt="product performance" src="https://github.com/user-attachments/assets/4d293d1f-d796-40cf-bed9-99be5b335375" /> <br>
 
   - Category Performance
@@ -605,7 +605,7 @@ A multi-page dashboard was developed to support business decision-making:
 
 <br>
 
-- Customer Insights <br>
+#### 4. Customer Insights <br>
 <img height="300" alt="customer insight" src="https://github.com/user-attachments/assets/4a9f5d4a-3207-4999-b4bc-7e848d1da3d3" /> <br>
 
   - Customer records
@@ -616,7 +616,7 @@ A multi-page dashboard was developed to support business decision-making:
 <br>
 <br>
 
-## Key Insights
+### Key Insights
 
 - Executive Overview
   - Total revenue: $733.09M across the full period
@@ -644,17 +644,22 @@ A multi-page dashboard was developed to support business decision-making:
   - Customer activity is concentrated in major cities (e.g., Shenzhen, Shanghai, Guangzhou), suggesting strong urban market dependence.
 
 <br>
-<br>
 
-## Key Engineering Decisions
+### Key Engineering Decisions
 
 - Adopted a star schema for analytical performance and simplicity
 - Used surrogate keys to maintain consistency across joins
 - Built modular dbt models to ensure reusability and scalability
 - Created aggregated marts to reduce query cost in BI layer
-🔹 B. “Scalability Considerations”
-## Scalability Considerations
 
-- Models designed to support incremental loading (future enhancement)
+<br>
+
+### Scalability Considerations
+
+- Data models designed to support incremental loading for efficient future data ingestion
 - BigQuery used for distributed query processing at scale
 - dbt enables modular expansion of new business domains
+
+
+<br>
+<br>
