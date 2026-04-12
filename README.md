@@ -1,4 +1,5 @@
 # Modern Retail Analytics Engineering Platform (BigQuery + dbt + Power BI)
+<img height="400" alt="Lineage DAG updated 0" src="https://github.com/user-attachments/assets/5872dfc0-1e37-4f8f-a745-cfd8a0987d37" />
 
 <br>
 
