@@ -124,7 +124,7 @@ This dataset contains all transformed, analytics-ready models built using dbt. I
 <br>
 
 
-## 📂 Project Structure
+## 📂 Model Structure
 
 ```text
 models/
